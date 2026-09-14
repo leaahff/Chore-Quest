@@ -10,7 +10,7 @@
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 
-  <!-- ===== PWA (ajout) ===== -->
+  <!-- ===== PWA ===== -->
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#40a88b" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#1c2a2a" media="(prefers-color-scheme: dark)">
@@ -158,37 +158,6 @@
       .icon-btn > svg, .icon-btn > i { width: 14px; height: 14px; }
       .brand h1 { font-size: 1.1rem; }
     }
-
-    /* Notification banner */
-    .notif-banner {
-      margin-top: 16px;
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px;
-      border-radius: 1.5rem;
-      background: color-mix(in oklch, var(--accent) 8%, var(--card));
-      border: 1px solid color-mix(in oklch, var(--accent) 40%, var(--border));
-      box-shadow: var(--shadow-soft);
-      animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    .notif-banner .notif-icon {
-      width: 36px; height: 36px; flex-shrink: 0;
-      display: grid; place-items: center;
-      border-radius: 999px;
-      background: color-mix(in oklch, var(--accent) 20%, transparent);
-      color: var(--accent-foreground);
-    }
-    .notif-banner .notif-icon svg { width: 18px; height: 18px; }
-    .notif-banner .notif-text { flex: 1; min-width: 0; }
-    .notif-banner .notif-text p:first-child { font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px; }
-    .notif-banner .notif-text p:last-child { font-size: 0.75rem; color: var(--muted-foreground); }
-    .notif-banner .notif-cta {
-      flex-shrink: 0; padding: 8px 14px;
-      border: 0; border-radius: 999px;
-      background: var(--primary); color: var(--primary-foreground);
-      font-size: 0.75rem; font-weight: 700;
-      cursor: pointer; transition: transform 0.15s;
-    }
-    .notif-banner .notif-cta:active { transform: scale(0.95); }
 
     .card {
       background: var(--card);
@@ -386,27 +355,6 @@
       color: var(--foreground);
     }
 
-    /* Nudge */
-    .nudge {
-      margin-top: 16px;
-      display: flex; align-items: center; gap: 12px;
-      padding: 14px;
-      background: color-mix(in oklch, var(--primary) 5%, var(--card));
-      border: 1px solid color-mix(in oklch, var(--primary) 30%, var(--border));
-      border-radius: 1.5rem;
-      box-shadow: var(--shadow-soft);
-      animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-    }
-    .nudge-icon {
-      width: 36px; height: 36px; flex-shrink: 0;
-      display: grid; place-items: center;
-      border-radius: 999px;
-      background: color-mix(in oklch, var(--primary) 15%, transparent);
-      color: var(--primary);
-    }
-    .nudge-icon svg { width: 16px; height: 16px; }
-    .nudge p { font-size: 0.75rem; font-weight: 500; }
-
     .section { margin-top: 24px; }
     .section-title { font-family: var(--font-display); font-weight: 700; font-size: 1rem; margin-bottom: 12px; }
 
@@ -548,47 +496,144 @@
       animation: xp-float 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
-    /* Badges grid (in sheet) */
-    .badges-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .badge-card {
+    /* ===== Badge chains ===== */
+    .chain-list { display: flex; flex-direction: column; gap: 10px; }
+    .badge-chain {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 1.5rem;
+      border-radius: 1.25rem;
       box-shadow: var(--shadow-soft);
-      padding: 12px 10px;
-      text-align: center;
+      padding: 14px;
       transition: opacity 0.2s;
     }
-    .badge-card.locked {
-      background: color-mix(in oklch, var(--muted) 40%, var(--card));
-      border-style: dashed;
-      box-shadow: none;
+    .badge-chain.locked { opacity: 0.85; }
+    .chain-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .badge-icon {
-      width: 40px; height: 40px; margin: 0 auto;
+    .chain-icon {
+      width: 42px; height: 42px;
       display: grid; place-items: center;
       border-radius: 999px;
+      flex-shrink: 0;
       background: color-mix(in oklch, var(--badge) 15%, transparent);
       color: var(--badge);
     }
-    .badge-card.locked .badge-icon { background: var(--muted); color: var(--muted-foreground); }
-    .badge-icon svg { width: 20px; height: 20px; }
-    .badge-name { margin-top: 8px; font-size: 11px; font-weight: 700; line-height: 1.2; }
-    .badge-card.locked .badge-name { color: var(--muted-foreground); }
-    .badge-hint { font-size: 10px; color: var(--muted-foreground); margin-top: 2px; }
-    .badge-progress {
-      margin-top: 8px;
-      height: 4px;
+    .chain-icon svg { width: 20px; height: 20px; }
+    .badge-chain[data-chain="streak"] .chain-icon {
+      background: color-mix(in oklch, var(--streak) 18%, transparent);
+      color: var(--streak);
+    }
+    .badge-chain[data-chain="level"] .chain-icon {
+      background: color-mix(in oklch, var(--accent) 20%, transparent);
+      color: var(--accent-foreground);
+    }
+    .badge-chain[data-chain="xp"] .chain-icon {
+      background: color-mix(in oklch, var(--xp) 15%, transparent);
+      color: var(--xp);
+    }
+    .badge-chain[data-chain="reward"] .chain-icon {
+      background: color-mix(in oklch, var(--positive) 18%, transparent);
+      color: var(--positive);
+    }
+    .chain-info { min-width: 0; flex: 1; }
+    .chain-name {
+      font-family: var(--font-display);
+      font-size: 0.9375rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .chain-sub {
+      margin-top: 3px;
+      font-size: 0.72rem;
+      color: var(--muted-foreground);
+      line-height: 1.3;
+    }
+    .chain-sub strong { color: var(--foreground); font-weight: 700; }
+    .chain-count {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: color-mix(in oklch, var(--badge) 15%, transparent);
+      color: var(--badge);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 0.75rem;
+    }
+    .badge-chain.maxed .chain-count {
+      background: color-mix(in oklch, var(--positive) 18%, transparent);
+      color: var(--positive);
+    }
+
+    .chain-bar {
+      margin-top: 12px;
+      height: 6px;
       border-radius: 999px;
       background: var(--muted);
       overflow: hidden;
     }
-    .badge-progress-fill {
+    .chain-fill {
       height: 100%;
       border-radius: 999px;
-      background: var(--badge);
-      transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      background: linear-gradient(90deg, var(--badge), color-mix(in oklch, var(--badge) 60%, var(--accent)));
+      transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     }
+    .badge-chain[data-chain="streak"] .chain-fill {
+      background: linear-gradient(90deg, var(--streak), color-mix(in oklch, var(--streak) 60%, var(--accent)));
+    }
+    .badge-chain[data-chain="level"] .chain-fill {
+      background: linear-gradient(90deg, var(--accent), color-mix(in oklch, var(--accent) 60%, var(--primary)));
+    }
+    .badge-chain[data-chain="xp"] .chain-fill {
+      background: linear-gradient(90deg, var(--xp), color-mix(in oklch, var(--xp) 60%, var(--accent)));
+    }
+    .badge-chain[data-chain="reward"] .chain-fill {
+      background: linear-gradient(90deg, var(--positive), color-mix(in oklch, var(--positive) 60%, var(--primary)));
+    }
+
+    .chain-tiers {
+      margin-top: 10px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .tier-dot {
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--muted);
+      transition: background 0.3s;
+      position: relative;
+    }
+    .tier-dot.filled {
+      background: var(--badge);
+    }
+    .tier-dot.current {
+      background: var(--badge);
+      box-shadow: 0 0 0 3px color-mix(in oklch, var(--badge) 25%, transparent);
+      animation: tier-pulse 2s ease-in-out infinite;
+    }
+    .badge-chain[data-chain="streak"] .tier-dot.filled,
+    .badge-chain[data-chain="streak"] .tier-dot.current { background: var(--streak); }
+    .badge-chain[data-chain="streak"] .tier-dot.current { box-shadow: 0 0 0 3px color-mix(in oklch, var(--streak) 25%, transparent); }
+    .badge-chain[data-chain="level"] .tier-dot.filled,
+    .badge-chain[data-chain="level"] .tier-dot.current { background: var(--accent); }
+    .badge-chain[data-chain="level"] .tier-dot.current { box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 25%, transparent); }
+    .badge-chain[data-chain="xp"] .tier-dot.filled,
+    .badge-chain[data-chain="xp"] .tier-dot.current { background: var(--xp); }
+    .badge-chain[data-chain="xp"] .tier-dot.current { box-shadow: 0 0 0 3px color-mix(in oklch, var(--xp) 25%, transparent); }
+    .badge-chain[data-chain="reward"] .tier-dot.filled,
+    .badge-chain[data-chain="reward"] .tier-dot.current { background: var(--positive); }
+    .badge-chain[data-chain="reward"] .tier-dot.current { box-shadow: 0 0 0 3px color-mix(in oklch, var(--positive) 25%, transparent); }
+
+    @keyframes tier-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.65; }
+    }
+
     .badges-summary {
       display: flex;
       align-items: center;
@@ -1155,52 +1200,92 @@
       "Pristine Sage", "Crystal Sovereign", "Eternal Tidiness", "Chorequest Immortal",
     ];
 
-    const ACHIEVEMENTS = [
-      { id: "first",     name: "First Sweep",    hint: "Complete 1 chore",       icon: "sparkles",
-        unlocked: (s) => s.completedCount >= 1,
-        progress: (s) => ({ current: Math.min(s.completedCount, 1), target: 1 }) },
-      { id: "ten",       name: "On a Roll",      hint: "Complete 10 chores",     icon: "target",
-        unlocked: (s) => s.completedCount >= 10,
-        progress: (s) => ({ current: Math.min(s.completedCount, 10), target: 10 }) },
-      { id: "twentyfive",name: "Chore Machine",  hint: "Complete 25 chores",     icon: "zap",
-        unlocked: (s) => s.completedCount >= 25,
-        progress: (s) => ({ current: Math.min(s.completedCount, 25), target: 25 }) },
-      { id: "fifty",     name: "Unstoppable",    hint: "Complete 50 chores",     icon: "rocket",
-        unlocked: (s) => s.completedCount >= 50,
-        progress: (s) => ({ current: Math.min(s.completedCount, 50), target: 50 }) },
-      { id: "streak3",   name: "Streak Starter", hint: "3-day streak",           icon: "flame",
-        unlocked: (s) => s.bestStreak >= 3,
-        progress: (s) => ({ current: Math.min(s.bestStreak, 3), target: 3 }) },
-      { id: "streak7",   name: "Week Warrior",   hint: "7-day streak",           icon: "calendar",
-        unlocked: (s) => s.bestStreak >= 7,
-        progress: (s) => ({ current: Math.min(s.bestStreak, 7), target: 7 }) },
-      { id: "streak14",  name: "Fortnight Fire", hint: "14-day streak",          icon: "flame",
-        unlocked: (s) => s.bestStreak >= 14,
-        progress: (s) => ({ current: Math.min(s.bestStreak, 14), target: 14 }) },
-      { id: "streak30",  name: "Monthly Blaze",  hint: "30-day streak",          icon: "flame",
-        unlocked: (s) => s.bestStreak >= 30,
-        progress: (s) => ({ current: Math.min(s.bestStreak, 30), target: 30 }) },
-      { id: "level5",    name: "High Five",      hint: "Reach level 5",          icon: "trophy",
-        unlocked: (s) => levelInfo(s.totalXp).level >= 5,
-        progress: (s) => ({ current: Math.min(levelInfo(s.totalXp).level, 5), target: 5 }) },
-      { id: "level10",   name: "Double Digits",  hint: "Reach level 10",         icon: "crown",
-        unlocked: (s) => levelInfo(s.totalXp).level >= 10,
-        progress: (s) => ({ current: Math.min(levelInfo(s.totalXp).level, 10), target: 10 }) },
-      { id: "xp1000",    name: "XP Hoarder",     hint: "Earn 1,000 XP",          icon: "gem",
-        unlocked: (s) => s.totalXp >= 1000,
-        progress: (s) => ({ current: Math.min(s.totalXp, 1000), target: 1000 }) },
-      { id: "xp5000",    name: "XP Tycoon",      hint: "Earn 5,000 XP",          icon: "gem",
-        unlocked: (s) => s.totalXp >= 5000,
-        progress: (s) => ({ current: Math.min(s.totalXp, 5000), target: 5000 }) },
-      { id: "perfectweek",name: "Perfect Week",  hint: "Clear all weekly chores",icon: "badge-check",
-        unlocked: (s) => s.perfectWeeks >= 1,
-        progress: (s) => ({ current: Math.min(s.perfectWeeks, 1), target: 1 }) },
-      { id: "reward1",   name: "First Treat",    hint: "Claim a reward",         icon: "gift",
-        unlocked: (s) => s.rewardsClaimed >= 1,
-        progress: (s) => ({ current: Math.min(s.rewardsClaimed, 1), target: 1 }) },
-      { id: "reward10",  name: "Self-Care Pro",  hint: "Claim 10 rewards",       icon: "gift",
-        unlocked: (s) => s.rewardsClaimed >= 10,
-        progress: (s) => ({ current: Math.min(s.rewardsClaimed, 10), target: 10 }) },
+    /* ============================================================
+       Badge chains — progressive tiers per theme
+       ============================================================ */
+    const BADGE_CHAINS = [
+      {
+        id: "streak",
+        name: "Streak Keeper",
+        icon: "flame",
+        tiers: [
+          { threshold: 3,   name: "Kindling",       hint: "3-day streak" },
+          { threshold: 7,   name: "Week Warrior",   hint: "7-day streak" },
+          { threshold: 14,  name: "Fortnight Fire", hint: "14-day streak" },
+          { threshold: 30,  name: "Monthly Blaze",  hint: "30-day streak" },
+          { threshold: 100, name: "Century Flame",  hint: "100-day streak" },
+          { threshold: 365, name: "Eternal Flame",  hint: "365-day streak" },
+        ],
+        getValue: (s) => s.bestStreak,
+        formatValue: (v) => `${v} day${v === 1 ? "" : "s"}`,
+      },
+      {
+        id: "completion",
+        name: "Chore Crusher",
+        icon: "zap",
+        tiers: [
+          { threshold: 1,   name: "First Sweep",   hint: "Complete 1 chore" },
+          { threshold: 10,  name: "On a Roll",     hint: "Complete 10 chores" },
+          { threshold: 25,  name: "Chore Machine", hint: "Complete 25 chores" },
+          { threshold: 50,  name: "Unstoppable",   hint: "Complete 50 chores" },
+          { threshold: 100, name: "Centurion",     hint: "Complete 100 chores" },
+          { threshold: 250, name: "Chore Legend",  hint: "Complete 250 chores" },
+        ],
+        getValue: (s) => s.completedCount,
+        formatValue: (v) => `${v} chore${v === 1 ? "" : "s"}`,
+      },
+      {
+        id: "level",
+        name: "Level Climber",
+        icon: "trophy",
+        tiers: [
+          { threshold: 5,  name: "High Five",       hint: "Reach level 5" },
+          { threshold: 10, name: "Double Digits",   hint: "Reach level 10" },
+          { threshold: 25, name: "Quarter Century", hint: "Reach level 25" },
+          { threshold: 50, name: "Legendary",       hint: "Reach level 50" },
+        ],
+        getValue: (s) => levelInfo(s.totalXp).level,
+        formatValue: (v) => `Level ${v}`,
+      },
+      {
+        id: "xp",
+        name: "XP Collector",
+        icon: "gem",
+        tiers: [
+          { threshold: 1000,  name: "XP Hoarder",  hint: "Earn 1,000 XP" },
+          { threshold: 5000,  name: "XP Tycoon",   hint: "Earn 5,000 XP" },
+          { threshold: 10000, name: "XP Magnate",  hint: "Earn 10,000 XP" },
+          { threshold: 25000, name: "XP Overlord", hint: "Earn 25,000 XP" },
+        ],
+        getValue: (s) => s.totalXp,
+        formatValue: (v) => `${v.toLocaleString()} XP`,
+      },
+      {
+        id: "reward",
+        name: "Self-Care",
+        icon: "gift",
+        tiers: [
+          { threshold: 1,  name: "First Treat",    hint: "Claim a reward" },
+          { threshold: 5,  name: "Treat Yourself", hint: "Claim 5 rewards" },
+          { threshold: 10, name: "Self-Care Pro",  hint: "Claim 10 rewards" },
+          { threshold: 25, name: "Pampered",       hint: "Claim 25 rewards" },
+        ],
+        getValue: (s) => s.rewardsClaimed,
+        formatValue: (v) => `${v} reward${v === 1 ? "" : "s"}`,
+      },
+      {
+        id: "perfect",
+        name: "Perfect Weeks",
+        icon: "badge-check",
+        tiers: [
+          { threshold: 1,  name: "Perfect Week",      hint: "Clear all weekly chores" },
+          { threshold: 4,  name: "Monthly Perfection",hint: "4 perfect weeks" },
+          { threshold: 12, name: "Quarterly Mastery", hint: "12 perfect weeks" },
+          { threshold: 52, name: "Yearly Perfection", hint: "52 perfect weeks" },
+        ],
+        getValue: (s) => s.perfectWeeks || 0,
+        formatValue: (v) => `${v} week${v === 1 ? "" : "s"}`,
+      },
     ];
 
     const REWARD_ICON_MAP = {
@@ -1284,8 +1369,39 @@
       return "id-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
     }
 
-    function countUnlockedBadges() {
-      return ACHIEVEMENTS.filter((a) => a.unlocked(state)).length;
+    /* ===== Chain progress helpers ===== */
+    function chainProgress(chain) {
+      const value = chain.getValue(state);
+      const tiers = chain.tiers;
+      let unlockedCount = 0;
+      for (const t of tiers) {
+        if (value >= t.threshold) unlockedCount++;
+      }
+      const totalTiers = tiers.length;
+      const isMaxed = unlockedCount >= totalTiers;
+      const nextTier = isMaxed ? null : tiers[unlockedCount];
+      const currentTier = unlockedCount > 0 ? tiers[unlockedCount - 1] : null;
+
+      let progressPct = 0;
+      if (isMaxed) {
+        progressPct = 100;
+      } else if (currentTier) {
+        const from = currentTier.threshold;
+        const to = nextTier.threshold;
+        progressPct = Math.min(100, Math.max(0, ((value - from) / (to - from)) * 100));
+      } else {
+        progressPct = Math.min(100, (value / nextTier.threshold) * 100);
+      }
+
+      return { value, unlockedCount, totalTiers, isMaxed, nextTier, currentTier, progressPct };
+    }
+
+    function countUnlockedTiers() {
+      return BADGE_CHAINS.reduce((sum, chain) => sum + chainProgress(chain).unlockedCount, 0);
+    }
+
+    function countTotalTiers() {
+      return BADGE_CHAINS.reduce((sum, chain) => sum + chain.tiers.length, 0);
     }
 
     /* Weekly stats */
@@ -1302,7 +1418,6 @@
         if (k >= wkStart && k <= today) chores += v;
       }
 
-      // Previous week
       const lastWeekEnd = new Date(wkStart + "T00:00:00");
       lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
       const lwEnd = dayKey(lastWeekEnd);
@@ -1373,14 +1488,13 @@
     const ui = {
       dark: false,
       tab: "weekly",
-      choreFilter: "all", // all | pending | done
+      choreFilter: "all",
       burstId: null,
       shopOpen: false,
       statsOpen: false,
       badgesOpen: false,
       rewardFormOpen: false,
       rewardDraft: { name: "", cost: 20, icon: "gift" },
-      notifDismissed: false,
       levelUpModal: null,
     };
 
@@ -1405,7 +1519,7 @@
     let undoTimer = null;
     let reminderTimer = null;
     let levelUpToken = 0;
-    let pendingUndo = null; // { chore, index, choreId }
+    let pendingUndo = null;
 
     /* DOM */
     const app = document.getElementById("app");
@@ -1508,8 +1622,9 @@
       if (perm === "granted") {
         notifPrefs.enabled = true;
         saveNotifPrefs();
-        notify("Chorequest reminders are on", { body: "We'll ping you when chores pile up and when you level up.", tag: "chorequest-welcome" });
-        showToast("Notifications enabled", "bell-ring");
+        notify("Reminders are on", { body: "We'll send you a gentle nudge to keep your streak alive.", tag: "chorequest-welcome" });
+        showToast("Reminders enabled", "bell-ring");
+        setTimeout(maybeDailyReminder, 800);
       } else if (perm === "denied") {
         notifPrefs.enabled = false;
         saveNotifPrefs();
@@ -1518,26 +1633,67 @@
       render();
       return perm;
     }
+
     function disableNotifications() {
       notifPrefs.enabled = false;
       saveNotifPrefs();
-      showToast("Notifications turned off.", "bell-off");
+      showToast("Reminders turned off.", "bell-off");
       render();
     }
 
+    /* ============================================================
+       Soft, streak-focused reminders
+       ============================================================ */
     function maybeDailyReminder() {
       if (!notifActive()) return;
       const today = dayKey();
       if (notifPrefs.lastReminderDay === today) return;
+
       const pending = state.chores.filter((c) => !c.completedAt);
       if (pending.length === 0) return;
+
+      const pendingCount = pending.length;
+      const choreWord = pendingCount > 1 ? "chores" : "chore";
+      const hasStreak = state.streak > 0;
+      const streakDays = state.streak;
       const day = new Date().getDay();
-      const daysLeft = (7 - day) % 7 || 7;
-      let body;
-      if (day === 6 || day === 0) body = `Last chance — ${pending.length} chore${pending.length > 1 ? "s" : ""} before Sunday's reset.`;
-      else if (day === 5) body = `Weekend is here. ${pending.length} chore${pending.length > 1 ? "s" : ""} left before Sunday.`;
-      else body = `${pending.length} chore${pending.length > 1 ? "s" : ""} left — reset in ${daysLeft} day${daysLeft > 1 ? "s" : ""}.`;
-      notify("Chorequest reminder", { body, tag: "chorequest-reminder" });
+      const isWeekend = day === 6 || day === 0;
+      const isFriday = day === 5;
+
+      let title, body;
+
+      if (isWeekend) {
+        title = "Last chance before reset";
+        body = `${pendingCount} ${choreWord} left before Sunday's reset.`;
+      } else if (isFriday) {
+        title = hasStreak ? `🔥 ${streakDays}-day streak` : "Weekend is near";
+        body = hasStreak
+          ? `${pendingCount} ${choreWord} left to keep your ${streakDays}-day streak alive.`
+          : `${pendingCount} ${choreWord} to tackle — start a new streak this weekend!`;
+      } else if (hasStreak) {
+        const softVariations = [
+          `You have ${pendingCount} ${choreWord} left to maintain your streak.`,
+          `Just ${pendingCount} ${choreWord} to keep your ${streakDays}-day chain going!`,
+          `A little progress goes a long way — ${pendingCount} ${choreWord} to go.`,
+          `Your ${streakDays}-day streak is waiting — ${pendingCount} ${choreWord} left.`,
+          `Keep the momentum — ${pendingCount} ${choreWord} to finish today.`,
+          `${pendingCount} ${choreWord} away from another day of progress.`,
+          `Small steps, big streak — ${pendingCount} ${choreWord} left.`,
+        ];
+        title = `🔥 ${streakDays}-day streak`;
+        body = softVariations[day % softVariations.length];
+      } else {
+        const freshStartVariations = [
+          `Ready to begin? ${pendingCount} ${choreWord} to tackle.`,
+          `A fresh start awaits — ${pendingCount} ${choreWord} to do.`,
+          `${pendingCount} ${choreWord} waiting for you today.`,
+          `Start your first streak — ${pendingCount} ${choreWord} to go.`,
+        ];
+        title = "Chorequest reminder";
+        body = freshStartVariations[day % freshStartVariations.length];
+      }
+
+      notify(title, { body, tag: "chorequest-reminder" });
       notifPrefs.lastReminderDay = today;
       saveNotifPrefs();
     }
@@ -1597,10 +1753,8 @@
       const level = levelInfo(state.totalXp);
       return [
         buildHeader(),
-        buildNotifBanner(),
         buildLevelCard(level),
         buildWeekCard(),
-        buildNudge(),
         buildChoresSection(),
         buildAddChoreSection(),
       ].join("");
@@ -1609,10 +1763,10 @@
     function buildHeader() {
       const perm = notifPermission();
       const notifClass = notifActive() ? "notif-on" : (perm === "denied" || perm === "unsupported" ? "notif-off" : "");
-      const notifTitle = notifActive() ? "Notifications on — click to disable"
+      const notifTitle = notifActive() ? "Reminders on — click to disable"
         : perm === "denied" ? "Notifications blocked in browser"
         : perm === "unsupported" ? "Notifications unsupported"
-        : "Enable notifications";
+        : "Enable reminders";
       const coinLabel = state.coins > 999 ? "999+" : String(state.coins);
 
       return `
@@ -1643,24 +1797,6 @@
       `;
     }
 
-    function buildNotifBanner() {
-      if (!notifSupported) return "";
-      const perm = Notification.permission;
-      if (perm === "granted" || perm === "denied") return "";
-      if (ui.notifDismissed) return "";
-      return `
-        <div class="notif-banner">
-          <span class="notif-icon">${icon("bell-ring")}</span>
-          <div class="notif-text">
-            <p>Get reminders</p>
-            <p>We'll ping you before the weekly reset and when you level up.</p>
-          </div>
-          <button class="notif-cta" data-action="request-notifications">Enable</button>
-          <button class="reward-delete" data-action="dismiss-notif-banner" aria-label="Dismiss">${icon("x")}</button>
-        </div>
-      `;
-    }
-
     function buildLevelCard(level) {
       const total = state.chores.length;
       const done = state.chores.filter((c) => c.completedAt).length;
@@ -1674,8 +1810,8 @@
       const circ = 2 * Math.PI * radius;
       const offset = circ - (Math.min(100, Math.max(0, pct)) / 100) * circ;
 
-      const badgesUnlocked = countUnlockedBadges();
-      const badgesTotal = ACHIEVEMENTS.length;
+      const badgesUnlocked = countUnlockedTiers();
+      const badgesTotal = countTotalTiers();
       const badgesPct = Math.round((badgesUnlocked / badgesTotal) * 100);
       const streakLabel = state.streak === 1 ? "day" : "days";
       const bestStreakLabel = state.bestStreak === 1 ? "day" : "days";
@@ -1723,7 +1859,7 @@
             <button type="button" class="dash-stat badges clickable"
               data-action="open-badges"
               aria-label="View all badges (${badgesUnlocked} of ${badgesTotal} unlocked)"
-              title="${badgesUnlocked} of ${badgesTotal} badges unlocked — tap to view">
+              title="${badgesUnlocked} of ${badgesTotal} tiers unlocked — tap to view">
               <span class="dash-stat-icon">${icon("award")}</span>
               <div class="dash-stat-info">
                 <p class="dash-stat-value">${badgesUnlocked}<span class="unit">/ ${badgesTotal}</span></p>
@@ -1771,23 +1907,6 @@
       `;
     }
 
-    function buildNudge() {
-      const remaining = state.chores.filter((c) => !c.completedAt);
-      if (remaining.length === 0) return "";
-      const day = new Date().getDay();
-      const daysLeft = (7 - day) % 7 || 7;
-      let text;
-      if (day === 6 || day === 0) text = `Last chance! ${remaining.length} chore${remaining.length > 1 ? "s" : ""} left before the Sunday reset.`;
-      else if (day === 5) text = `The weekend is here — only ${remaining.length} chore${remaining.length > 1 ? "s" : ""} to go before Sunday.`;
-      else text = `${remaining.length} chore${remaining.length > 1 ? "s" : ""} to finish — Sunday reset in ${daysLeft} day${daysLeft > 1 ? "s" : ""}. Keep your streak alive!`;
-      return `
-        <div class="nudge">
-          <span class="nudge-icon">${icon("bell-ring")}</span>
-          <p>${esc(text)}</p>
-        </div>
-      `;
-    }
-
     function buildChoresSection() {
       const tab = ui.tab;
       const filter = ui.choreFilter;
@@ -1797,16 +1916,13 @@
       const done = tabList.filter((c) => c.completedAt);
       const remainingXp = pending.reduce((sum, c) => sum + c.xp, 0);
 
-      // Counts for filter chips
       const counts = { all: tabList.length, pending: pending.length, done: done.length };
 
-      // Apply filter
       let visible;
       if (filter === "pending") visible = pending;
       else if (filter === "done") visible = done;
       else visible = tabList;
 
-      // Sort: pending first, then by XP descending
       const sorted = [...visible].sort((a, b) => {
         if (Boolean(a.completedAt) !== Boolean(b.completedAt)) return a.completedAt ? 1 : -1;
         return b.xp - a.xp;
@@ -1905,43 +2021,61 @@
       `;
     }
 
-    /* Badges sheet */
-    function buildBadgesGrid() {
-      return ACHIEVEMENTS.map((a) => {
-        const unlocked = a.unlocked(state);
-        const iconName = unlocked ? a.icon : "lock";
-        let progressHtml = "";
-        if (!unlocked && a.progress) {
-          const { current, target } = a.progress(state);
-          const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
-          progressHtml = `
-            <div class="badge-progress" title="${current} / ${target}">
-              <div class="badge-progress-fill" style="width:${pct}%"></div>
-            </div>
-          `;
-        }
-        return `
-          <div class="badge-card ${unlocked ? "" : "locked"}">
-            <div class="badge-icon">${icon(iconName)}</div>
-            <p class="badge-name">${esc(a.name)}</p>
-            <p class="badge-hint">${esc(a.hint)}</p>
-            ${progressHtml}
-          </div>
-        `;
+    /* ============================================================
+       Badges sheet — chain-based UI
+       ============================================================ */
+    function buildBadgeChain(chain) {
+      const prog = chainProgress(chain);
+      const { value, unlockedCount, totalTiers, isMaxed, nextTier, currentTier, progressPct } = prog;
+
+      let subHtml;
+      if (isMaxed) {
+        subHtml = `<strong>${esc(chain.formatValue(value))}</strong> — all tiers unlocked!`;
+      } else if (currentTier) {
+        const remaining = nextTier.threshold - value;
+        subHtml = `<strong>${esc(currentTier.name)}</strong> · ${esc(chain.formatValue(value))} · ${remaining} to next`;
+      } else {
+        const remaining = nextTier.threshold - value;
+        subHtml = `Next: <strong>${esc(nextTier.name)}</strong> · ${remaining} to go`;
+      }
+
+      const dotsHtml = chain.tiers.map((_, i) => {
+        const filled = i < unlockedCount;
+        const current = i === unlockedCount && !isMaxed;
+        const cls = `tier-dot${filled ? " filled" : ""}${current ? " current" : ""}`;
+        const tier = chain.tiers[i];
+        return `<span class="${cls}" title="${esc(tier.name)} — ${esc(tier.hint)}"></span>`;
       }).join("");
+
+      return `
+        <div class="badge-chain ${isMaxed ? "maxed" : ""}" data-chain="${chain.id}">
+          <div class="chain-head">
+            <span class="chain-icon">${icon(chain.icon)}</span>
+            <div class="chain-info">
+              <p class="chain-name">${esc(chain.name)}</p>
+              <p class="chain-sub">${subHtml}</p>
+            </div>
+            <span class="chain-count">${unlockedCount}/${totalTiers}</span>
+          </div>
+          <div class="chain-bar">
+            <div class="chain-fill" style="width:${progressPct}%"></div>
+          </div>
+          <div class="chain-tiers">${dotsHtml}</div>
+        </div>
+      `;
     }
 
     function buildBadgesSheet() {
-      const unlocked = countUnlockedBadges();
-      const total = ACHIEVEMENTS.length;
+      const unlocked = countUnlockedTiers();
+      const total = countTotalTiers();
       const pct = Math.round((unlocked / total) * 100);
 
       const summary = `
         <div class="badges-summary">
           <span class="badges-summary-icon">${icon("award")}</span>
           <div class="badges-summary-text">
-            <p class="badges-summary-title">${unlocked} of ${total} unlocked</p>
-            <p class="badges-summary-sub">${pct}% complete — keep earning XP to unlock more.</p>
+            <p class="badges-summary-title">${unlocked} of ${total} tiers unlocked</p>
+            <p class="badges-summary-sub">${pct}% complete — keep progressing through each chain.</p>
             <div class="badges-summary-bar">
               <div class="badges-summary-fill" style="width:${pct}%"></div>
             </div>
@@ -1949,18 +2083,20 @@
         </div>
       `;
 
+      const chainsHtml = BADGE_CHAINS.map(buildBadgeChain).join("");
+
       return `
         <div class="sheet-overlay" data-action="close-badges">
           <div class="sheet" data-stop-propagation="true">
             <div class="sheet-grabber"></div>
             <div class="sheet-header">
-              <h2>Badges</h2>
+              <h2>Badge chains</h2>
               <span class="sheet-count">${icon("award")} ${unlocked} / ${total}</span>
               <button class="sheet-close" data-action="close-badges" aria-label="Close badges">${icon("x")}</button>
             </div>
             <div class="sheet-body">
               ${summary}
-              <div class="badges-grid">${buildBadgesGrid()}</div>
+              <div class="chain-list">${chainsHtml}</div>
             </div>
           </div>
         </div>
@@ -2338,7 +2474,6 @@
       if (idx === -1) return;
       const chore = state.chores[idx];
 
-      // If there's already a pending undo, clear it (commit the previous delete)
       if (pendingUndo) {
         pendingUndo = null;
         hideUndoToast();
@@ -2431,8 +2566,6 @@
       switch (action) {
         case "toggle-theme": ui.dark = !ui.dark; applyTheme(); render(); break;
         case "toggle-notifications": notifActive() ? disableNotifications() : requestNotificationPermission(); break;
-        case "request-notifications": requestNotificationPermission(); break;
-        case "dismiss-notif-banner": ui.notifDismissed = true; render(); break;
         case "open-shop": closeAllSheets(); ui.shopOpen = true; render(); break;
         case "close-shop": ui.shopOpen = false; ui.rewardFormOpen = false; render(); break;
         case "open-stats": closeAllSheets(); ui.statsOpen = true; render(); break;
@@ -2464,7 +2597,6 @@
           choreDraft.xp = DIFFICULTY_XP[t.difficulty];
           haptic(10);
           render();
-          // Focus the name input for a quick edit
           setTimeout(() => {
             const el = document.getElementById("chore-name");
             if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
@@ -2511,7 +2643,6 @@
         else if (ui.statsOpen) { ui.statsOpen = false; render(); }
         else if (ui.badgesOpen) { ui.badgesOpen = false; render(); }
       }
-      // Ctrl/Cmd + Z for undo
       if ((e.ctrlKey || e.metaKey) && e.key === "z" && pendingUndo) {
         e.preventDefault();
         performUndo();
@@ -2553,7 +2684,7 @@
   })();
   </script>
 
-  <!-- ===== PWA : enregistrement du Service Worker (ajout) ===== -->
+  <!-- ===== PWA : enregistrement du Service Worker ===== -->
   <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
