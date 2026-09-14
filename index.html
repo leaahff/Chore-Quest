@@ -1088,7 +1088,7 @@
       padding: 10px 10px 10px 18px;
       border-radius: 999px;
       box-shadow: var(--shadow-lift);
-      z-index: 210;
+      z-index: 260;
       animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       max-width: calc(100% - 32px);
     }
@@ -2346,16 +2346,17 @@
       toastTimer = setTimeout(() => { toastEl.hidden = true; toastTimer = null; }, 2400);
     }
 
-    /* Undo toast */
-    function showUndoToast(choreName) {
-      undoToastText.textContent = `Deleted "${choreName}"`;
+    /* Undo toast — used both for deletions and for un-completing a chore */
+    function showUndoToast(text, duration = 5000) {
+      undoToastText.textContent = text;
       undoToastEl.hidden = false;
       if (window.lucide) window.lucide.createIcons();
       if (undoTimer) clearTimeout(undoTimer);
       undoTimer = setTimeout(() => {
         undoToastEl.hidden = true;
+        undoTimer = null;
         pendingUndo = null;
-      }, 5000);
+      }, duration);
     }
 
     function hideUndoToast() {
@@ -2365,13 +2366,31 @@
 
     function performUndo() {
       if (!pendingUndo) return;
-      const { chore, index } = pendingUndo;
+      const undo = pendingUndo;
+      pendingUndo = null;
+      hideUndoToast();
+
+      // ---- Undo a completion: restore the full pre-completion snapshot.
+      // This rolls back XP, bonus XP, coins, streak, best streak, freeze
+      // usage, xp/completion logs, counters and badge progress in one go.
+      if (undo.type === "complete") {
+        state = undo.snapshot;
+        ui.levelUpModal = null;
+        ui.burstId = null;
+        levelUpToken++; // cancel any pending auto-close of the level-up modal
+        saveState(state);
+        haptic(15);
+        showToast("Completion undone", "undo-2");
+        render();
+        return;
+      }
+
+      // ---- Undo a deletion: re-insert the chore at its original position.
+      const { chore, index } = undo;
       const newChores = [...state.chores];
       const insertAt = Math.min(Math.max(0, index), newChores.length);
       newChores.splice(insertAt, 0, chore);
       state = { ...state, chores: newChores };
-      pendingUndo = null;
-      hideUndoToast();
       saveState(state);
       haptic(15);
       render();
@@ -2393,6 +2412,10 @@
     function completeChore(id) {
       const chore = state.chores.find((c) => c.id === id);
       if (!chore || chore.completedAt) return;
+
+      // Snapshot the entire state *before* this completion so the undo
+      // action can restore every gained reward exactly as it was.
+      const snapshot = state;
 
       haptic(20);
       ui.burstId = id;
@@ -2435,12 +2458,7 @@
         chores: state.chores.map((c) => c.id === id ? { ...c, completedAt: new Date().toISOString() } : c),
       };
 
-      if (freezeUsed) {
-        showToast(`Freeze used — ${streak}-day streak preserved!`, "snowflake");
-        haptic([15, 30, 15]);
-      } else if (afterLevel <= beforeLevel && streakBonus > 0) {
-        showToast(`${streak}-day streak! +${streakBonus} bonus coins`, "flame");
-      }
+      if (freezeUsed) haptic([15, 30, 15]);
 
       if (afterLevel > beforeLevel) {
         const token = ++levelUpToken;
@@ -2467,6 +2485,13 @@
 
       saveState(state);
       render();
+
+      // Undo affordance — restores the pre-completion snapshot on tap.
+      const bits = [`+${chore.xp} XP`];
+      if (streakBonus > 0) bits.push(`+${streakBonus} coins`);
+      if (freezeUsed) bits.push("❄️ freeze used");
+      pendingUndo = { type: "complete", snapshot, choreName: chore.name };
+      showUndoToast(`${chore.name} · ${bits.join(" · ")}`, 8000);
     }
 
     function deleteChore(id) {
@@ -2480,13 +2505,13 @@
       }
 
       state = { ...state, chores: state.chores.filter((c) => c.id !== id) };
-      pendingUndo = { chore, index: idx };
+      pendingUndo = { type: "delete", chore, index: idx };
 
       saveState(state);
       haptic(15);
       render();
 
-      showUndoToast(chore.name);
+      showUndoToast(`Deleted "${chore.name}"`, 5000);
     }
 
     function addChore() {
