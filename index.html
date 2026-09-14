@@ -485,6 +485,7 @@
     .chore-btn svg { width: 20px; height: 20px; }
     .chore-btn.ghost { border-color: transparent; border-width: 0; }
     .chore-btn.ghost:hover { background: var(--muted); color: var(--foreground); }
+    .chore-btn.ghost.undo-hover:hover { background: color-mix(in oklch, var(--primary) 15%, transparent); color: var(--primary); }
     .chore-btn.delete-hover:hover { background: color-mix(in oklch, var(--destructive) 15%, transparent); color: var(--destructive); }
 
     .xp-float {
@@ -495,6 +496,7 @@
       color: var(--xp);
       animation: xp-float 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
+    .xp-float.negative { color: var(--negative); }
 
     /* ===== Badge chains ===== */
     .chain-list { display: flex; flex-direction: column; gap: 10px; }
@@ -1075,7 +1077,7 @@
     }
     .toast[hidden] { display: none; }
 
-    /* Undo toast */
+    /* Undo toast (delete only now) */
     .toast-undo {
       position: fixed; left: 50%; bottom: 24px;
       transform: translateX(-50%);
@@ -1462,6 +1464,7 @@
         redeemed: [],
         xpLog: {},
         completionsLog: {},
+        dailySnapshots: {},
         freezes: 1,
         perfectWeeks: 0,
         rewardsClaimed: 0,
@@ -1490,6 +1493,7 @@
       tab: "weekly",
       choreFilter: "all",
       burstId: null,
+      undoBurstId: null,
       shopOpen: false,
       statsOpen: false,
       badgesOpen: false,
@@ -1519,7 +1523,7 @@
     let undoTimer = null;
     let reminderTimer = null;
     let levelUpToken = 0;
-    let pendingUndo = null;
+    let pendingUndo = null; // delete-only now
 
     /* DOM */
     const app = document.getElementById("app");
@@ -1996,6 +2000,7 @@
     function buildChoreCard(chore) {
       const done = Boolean(chore.completedAt);
       const burst = ui.burstId === chore.id;
+      const undoBurst = ui.undoBurstId === chore.id;
       return `
         <div class="chore-card ${done ? "done" : ""}">
           <div class="chore-main">
@@ -2011,9 +2016,15 @@
           </div>
           <div class="chore-actions">
             ${burst ? `<span class="xp-float">+${chore.xp} XP</span>` : ""}
+            ${undoBurst ? `<span class="xp-float negative">−${chore.xp} XP</span>` : ""}
             <span class="chore-xp">+${chore.xp}</span>
             ${done
-              ? `<button class="chore-btn ghost delete-hover" data-action="delete-chore" data-id="${chore.id}" aria-label="Remove ${esc(chore.name)}">${icon("trash-2")}</button>`
+              ? `
+                <button class="chore-btn ghost undo-hover" data-action="undo-complete-chore" data-id="${chore.id}"
+                  aria-label="Undo completion of ${esc(chore.name)}" title="Undo completion">${icon("undo-2")}</button>
+                <button class="chore-btn ghost delete-hover" data-action="delete-chore" data-id="${chore.id}"
+                  aria-label="Remove ${esc(chore.name)}" title="Delete">${icon("trash-2")}</button>
+              `
               : `<button class="chore-btn" data-action="complete-chore" data-id="${chore.id}" aria-label="Complete ${esc(chore.name)}">${icon("check")}</button>`
             }
           </div>
@@ -2346,7 +2357,7 @@
       toastTimer = setTimeout(() => { toastEl.hidden = true; toastTimer = null; }, 2400);
     }
 
-    /* Undo toast — used both for deletions and for un-completing a chore */
+    /* Undo toast — used only for deletions now */
     function showUndoToast(text, duration = 5000) {
       undoToastText.textContent = text;
       undoToastEl.hidden = false;
@@ -2365,28 +2376,11 @@
     }
 
     function performUndo() {
-      if (!pendingUndo) return;
-      const undo = pendingUndo;
+      if (!pendingUndo || pendingUndo.type !== "delete") return;
+      const { chore, index } = pendingUndo;
       pendingUndo = null;
       hideUndoToast();
 
-      // ---- Undo a completion: restore the full pre-completion snapshot.
-      // This rolls back XP, bonus XP, coins, streak, best streak, freeze
-      // usage, xp/completion logs, counters and badge progress in one go.
-      if (undo.type === "complete") {
-        state = undo.snapshot;
-        ui.levelUpModal = null;
-        ui.burstId = null;
-        levelUpToken++; // cancel any pending auto-close of the level-up modal
-        saveState(state);
-        haptic(15);
-        showToast("Completion undone", "undo-2");
-        render();
-        return;
-      }
-
-      // ---- Undo a deletion: re-insert the chore at its original position.
-      const { chore, index } = undo;
       const newChores = [...state.chores];
       const insertAt = Math.min(Math.max(0, index), newChores.length);
       newChores.splice(insertAt, 0, chore);
@@ -2409,13 +2403,13 @@
       ui.rewardFormOpen = false;
     }
 
+    /* Complete a chore. We store a small per-chore metadata record so the
+       inline undo button (next to the trash icon) can reverse every single
+       gain this completion produced: XP, bonus XP, coins, level-up coins,
+       streak coins, and any streak freeze that was consumed. */
     function completeChore(id) {
       const chore = state.chores.find((c) => c.id === id);
       if (!chore || chore.completedAt) return;
-
-      // Snapshot the entire state *before* this completion so the undo
-      // action can restore every gained reward exactly as it was.
-      const snapshot = state;
 
       haptic(20);
       ui.burstId = id;
@@ -2438,16 +2432,32 @@
       const streakBonus = streak !== state.streak ? coinsForStreak(streak) : 0;
       const levelCoins = afterLevel > beforeLevel ? coinsForLevel(afterLevel) : 0;
       const choreCoins = coinsForChore(chore.xp);
+      const coinsGained = choreCoins + levelCoins + streakBonus;
 
       const today = dayKey();
+      const wasFirstToday = (state.completionsLog[today] || 0) === 0;
+
       const xpLog = { ...state.xpLog, [today]: (state.xpLog[today] || 0) + xpGained };
       const completionsLog = { ...state.completionsLog, [today]: (state.completionsLog[today] || 0) + 1 };
       const freezesLeft = freezeUsed ? Math.max(0, state.freezes - freezesToSpend) : state.freezes;
 
+      // Snapshot the day's opening streak state (only needed on the first
+      // completion of the day) so a full undo can restore it precisely.
+      const dailySnapshots = { ...(state.dailySnapshots || {}) };
+      if (wasFirstToday) {
+        dailySnapshots[today] = {
+          streak: state.streak,
+          bestStreak: state.bestStreak,
+          freezes: state.freezes,
+          lastCompletedDay: state.lastCompletedDay,
+        };
+      }
+
+      const nowIso = new Date().toISOString();
       state = {
         ...state,
         totalXp,
-        coins: state.coins + choreCoins + levelCoins + streakBonus,
+        coins: state.coins + coinsGained,
         completedCount: state.completedCount + 1,
         lastCompletedDay: today,
         streak,
@@ -2455,7 +2465,11 @@
         freezes: freezesLeft,
         xpLog,
         completionsLog,
-        chores: state.chores.map((c) => c.id === id ? { ...c, completedAt: new Date().toISOString() } : c),
+        dailySnapshots,
+        chores: state.chores.map((c) => c.id === id
+          ? { ...c, completedAt: nowIso, completionMeta: { xpGained, coinsGained, day: today, at: nowIso } }
+          : c
+        ),
       };
 
       if (freezeUsed) haptic([15, 30, 15]);
@@ -2485,13 +2499,96 @@
 
       saveState(state);
       render();
+    }
 
-      // Undo affordance — restores the pre-completion snapshot on tap.
-      const bits = [`+${chore.xp} XP`];
-      if (streakBonus > 0) bits.push(`+${streakBonus} coins`);
-      if (freezeUsed) bits.push("❄️ freeze used");
-      pendingUndo = { type: "complete", snapshot, choreName: chore.name };
-      showUndoToast(`${chore.name} · ${bits.join(" · ")}`, 8000);
+    /* Undo a completed chore. Reverses everything the completion granted:
+       - total XP (including any level-up bonus XP)
+       - coins (chore coins + level-up coins + streak bonus coins)
+       - the daily XP log entry and the daily completion count
+       - streak / best streak / freezes / lastCompletedDay (restored from
+         the daily snapshot if this was the last completion of the day)
+       - the completed flag + completionMeta on the chore itself
+       - any pending level-up modal from that completion */
+    function undoCompleteChore(id) {
+      const chore = state.chores.find((c) => c.id === id);
+      if (!chore || !chore.completedAt) return;
+
+      const meta = chore.completionMeta;
+      if (!meta) {
+        // Defensive fallback — clear the flag only.
+        state = {
+          ...state,
+          chores: state.chores.map((c) => c.id === id ? { ...c, completedAt: null } : c),
+        };
+        saveState(state);
+        render();
+        return;
+      }
+
+      const day = meta.day;
+
+      // XP log: subtract exactly what was added
+      const xpLog = { ...state.xpLog };
+      const newDayXp = Math.max(0, (xpLog[day] || 0) - meta.xpGained);
+      if (newDayXp > 0) xpLog[day] = newDayXp;
+      else delete xpLog[day];
+
+      // Completion log: decrement, and clean up if it hits zero
+      const completionsLog = { ...state.completionsLog };
+      const newDayCompletions = Math.max(0, (completionsLog[day] || 0) - 1);
+      const dayIsEmpty = newDayCompletions === 0;
+      if (dayIsEmpty) delete completionsLog[day];
+      else completionsLog[day] = newDayCompletions;
+
+      // Restore streak / freeze state if this was the last completion of the day
+      let streak = state.streak;
+      let bestStreak = state.bestStreak;
+      let freezes = state.freezes;
+      let lastCompletedDay = state.lastCompletedDay;
+
+      const dailySnapshots = { ...(state.dailySnapshots || {}) };
+      if (dayIsEmpty) {
+        const snap = dailySnapshots[day];
+        if (snap) {
+          streak = snap.streak;
+          bestStreak = snap.bestStreak;
+          freezes = snap.freezes;
+          lastCompletedDay = snap.lastCompletedDay;
+        }
+        delete dailySnapshots[day];
+      }
+
+      state = {
+        ...state,
+        totalXp: Math.max(0, state.totalXp - meta.xpGained),
+        coins: Math.max(0, state.coins - meta.coinsGained),
+        completedCount: Math.max(0, state.completedCount - 1),
+        streak,
+        bestStreak,
+        freezes,
+        lastCompletedDay,
+        xpLog,
+        completionsLog,
+        dailySnapshots,
+        chores: state.chores.map((c) => {
+          if (c.id !== id) return c;
+          const { completionMeta, ...rest } = c;
+          return { ...rest, completedAt: null };
+        }),
+      };
+
+      // Dismiss any level-up modal that came from this completion
+      ui.levelUpModal = null;
+      levelUpToken++;
+
+      // Brief negative-XP float on the card
+      ui.undoBurstId = id;
+      setTimeout(() => { if (ui.undoBurstId === id) { ui.undoBurstId = null; render(); } }, 1100);
+
+      saveState(state);
+      haptic(15);
+      showToast("Completion undone", "undo-2");
+      render();
     }
 
     function deleteChore(id) {
@@ -2601,6 +2698,7 @@
         case "set-tab": ui.tab = target.dataset.tab; render(); break;
         case "set-filter": ui.choreFilter = target.dataset.filter; render(); break;
         case "complete-chore": completeChore(id); break;
+        case "undo-complete-chore": undoCompleteChore(id); break;
         case "delete-chore": deleteChore(id); break;
         case "open-reward": ui.rewardFormOpen = true; render(); break;
         case "cancel-reward": ui.rewardFormOpen = false; render(); break;
