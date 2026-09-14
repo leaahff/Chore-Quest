@@ -9,6 +9,19 @@
   <meta property="og:description" content="Turn weekly and monthly chores into a game: earn XP, keep your streak alive, unlock badges and level up every time you clean.">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
+
+  <!-- ===== PWA (ajout) ===== -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#40a88b" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1c2a2a" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Chorequest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+  <!-- ===== /PWA ===== -->
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2205,7 +2218,6 @@
       if (undoTimer) clearTimeout(undoTimer);
       undoTimer = setTimeout(() => {
         undoToastEl.hidden = true;
-        undoToastEl.hidden = true;
         pendingUndo = null;
       }, 5000);
     }
@@ -2540,5 +2552,35 @@
     })();
   })();
   </script>
+
+  <!-- ===== PWA : enregistrement du Service Worker (ajout) ===== -->
+  <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+      try {
+        const reg = await navigator.serviceWorker.register("./service-worker.js");
+        console.log("[ChoreQuest] SW enregistré :", reg.scope);
+
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          newWorker?.addEventListener("statechange", () => {
+            if (
+              newWorker.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
+              if (confirm("A new version of Chorequest is available. Reload?")) {
+                newWorker.postMessage({ type: "SKIP_WAITING" });
+                window.location.reload();
+              }
+            }
+          });
+        });
+      } catch (e) {
+        console.warn("[ChoreQuest] SW non enregistré :", e);
+      }
+    });
+  }
+  </script>
+  <!-- ===== /PWA ===== -->
 </body>
 </html>
